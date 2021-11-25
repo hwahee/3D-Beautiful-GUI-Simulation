@@ -11,7 +11,7 @@ class MyCamera {
 		switch (cameraMode) {
 			case MyCamera.cameraModes[1]:
 			default:
-				this._camera = new ArcRotateCamera("Camera", Math.PI / 2 * 2.25, Math.PI / 2 * 0.75, 16, new Vector3(0, 2, 0), scene)
+				this._camera = new ArcRotateCamera("Camera", Math.PI / 2 * 2.25, Math.PI / 2 * 0.75, 0, new Vector3(0, 2, 0), scene)
 		}
 	}
 	attachControl(canvas: HTMLCanvasElement) {

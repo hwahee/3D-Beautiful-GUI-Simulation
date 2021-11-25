@@ -25,3 +25,4 @@ forked from: [3D-PVA-Simulator](https://github.com/hwahee/3D-PVA-Simulation)
 	- 카메라 클래스 분리
 
 ## 발생 문제
+- 문제: 플레이어의 회전이 카메라의 회전을 구독하도록 할 경우 전후좌우가 반전됨

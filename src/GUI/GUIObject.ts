@@ -1,13 +1,15 @@
-import { Mesh, MeshBuilder, Vector3 } from "@babylonjs/core";
+import { Mesh, MeshBuilder, StandardMaterial, Vector3 } from "@babylonjs/core";
 import { Movable } from "../objects/Object";
 import { gui } from "./GUI";
 
 class GUIObject extends Movable {
 	async load() {
-		let lodestone: Mesh = MeshBuilder.CreateSphere("sphere", { diameter: 1 }, this._scene)
-		lodestone.parent=this
-
-		lodestone.position = new Vector3(0, 0, 0)
+		let guiObject: Mesh = MeshBuilder.CreateSphere("sphere", { diameter: 1 }, this._scene)
+		let guiObjectMaterial=new StandardMaterial("guiObjectMaterial", this._scene)
+		guiObjectMaterial.wireframe=true
+		guiObject.material=guiObjectMaterial
+		guiObject.parent=this
+		guiObject.position = new Vector3(0, 0, 0)
 	}	
 	protected _attachButton() {
 		let offsetY = 0
