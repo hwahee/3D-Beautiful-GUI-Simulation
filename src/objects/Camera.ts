@@ -1,4 +1,4 @@
-import { ArcRotateCamera, Scene, TargetCamera, Vector3 } from "@babylonjs/core"
+import { ArcRotateCamera, Mesh, Scene, TargetCamera, Vector3 } from "@babylonjs/core"
 import { Movable } from "./Object"
 
 class MyCamera {
@@ -17,10 +17,11 @@ class MyCamera {
 	attachControl(canvas: HTMLCanvasElement) {
 		this._camera?.attachControl(canvas, true)
 	}
-	lookat(target: Movable) {
+	lookat(target: Movable|Mesh) {
 		this._camera?.setTarget(target.position)
 	}
 	getCamera() { return this._camera }
+	getRotation(){return this._camera?.absoluteRotation.toEulerAngles()}
 }
 
 const camera: MyCamera = new MyCamera()

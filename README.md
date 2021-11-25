@@ -13,6 +13,12 @@ forked from: [3D-PVA-Simulator](https://github.com/hwahee/3D-PVA-Simulation)
 ## 목표
 
 ## 진행 상황
+### #3 211119
+	- 3D 버튼 기능 설정과 GUI 지우기 기능 구현
+	- 카메라 PV-free 이동 구현
+### #2 211107
+	- 빈 공간 클릭시 오류 
+	- 연속해서 우클릭 시 같은 버튼이 중복해서 나오는 문제 해결
 ### #1 211106
 	- 프로젝트 포크
 	- 오브젝트에 3D GUI 기반 구현

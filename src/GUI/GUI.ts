@@ -22,12 +22,12 @@ class GUIManager {
 				target.gui3dPanel = new GUI.SpherePanel()
 				break
 			default:
-				target.gui3dPanel = new GUI.StackPanel3D(false)
+				target.gui3dPanel = new GUI.PlanePanel()
 				break
 		}
 		target.gui3dManager.addControl(target.gui3dPanel)
-		target.gui3dPanel.linkToTransformNode(target)
-		setInterval(() => { target.gui3dPanel.rotation = target.rotation }, 100)
+		target.gui3dPanel?.linkToTransformNode(target)
+		// setInterval(() => { target.gui3dPanel.rotation = camera.getRotation() }, 100)
 	}
 
 	setNameTag(name: string, op: {
@@ -67,21 +67,36 @@ class GUIManager {
 	setBtn3(name: string, op: {
 		innerText?: string, w?: number | string, h?: number | string, color?: string, bgcolor?: string, top?: string, left?: string, thick?: number, vAlign?: number, hAlign?: number, offsetY?: number
 	}, target: Movable): void {
+		if ((target.gui3dPanel?.children.map((i) => (i.name)) ?? []).includes(name)) return
+
 		const b = new GUI.HolographicButton(name)
 		b.name = name
 		b.text = op.innerText ?? "default"
 
-		target.gui3dPanel.addControl(b)
+		target.gui3dPanel?.addControl(b)
+		console.log(target.gui3dPanel)
 	}
 	setLine(name: string, op: {}, target?: Movable) {
 	}
 	setFnByName(name: string, fn: () => void, target?: Movable) {
-		const targetAdvTexture: GUI.AdvancedDynamicTexture = (target) ? target.advTexture : this._advTexture
-		targetAdvTexture?.rootContainer.children
-			.filter((i) => (i.name == name))
-			.forEach((i) => {
-				i.onPointerUpObservable.add(fn)
-			})
+		if (target?.gui3dPanel) {
+			const target3d = target?.gui3dPanel
+			if (target3d) {
+				target3d.children
+					.filter((i) => (i.name == name))
+					.forEach((i) => {
+						i.onPointerUpObservable.add(fn)
+					})
+			}
+		}
+		else {
+			const targetAdvTexture: GUI.AdvancedDynamicTexture = (target) ? target.advTexture : this._advTexture
+			targetAdvTexture?.rootContainer.children
+				.filter((i) => (i.name == name))
+				.forEach((i) => {
+					i.onPointerUpObservable.add(fn)
+				})
+		}
 	}
 
 	/**
@@ -92,18 +107,30 @@ class GUIManager {
 	 * @param target 
 	 */
 	removeByName(nameOrLambda: string | ((arg0: any) => boolean), target?: Movable) {
-		const targetAdvTexture: GUI.AdvancedDynamicTexture = (target) ? target.advTexture : this._advTexture
 		let myfilter: (arg0: any) => boolean
 		if (typeof nameOrLambda == typeof "")
 			myfilter = (i) => (i.name == nameOrLambda)
 		else
 			myfilter = nameOrLambda as (arg0: any) => boolean
 
-		targetAdvTexture?.rootContainer.children
-			.filter(myfilter)
-			.forEach((i) => {
-				targetAdvTexture?.removeControl(i)
-			})
+		if (target?.gui3dPanel) {
+			const target3d = target?.gui3dPanel
+			if (target3d) {
+				target3d.children
+					.filter(myfilter)
+					.forEach((i) => {
+						target3d.removeControl(i)
+					})
+			}
+		}
+		else {
+			const targetAdvTexture: GUI.AdvancedDynamicTexture = (target) ? target.advTexture : this._advTexture
+			targetAdvTexture?.rootContainer.children
+				.filter(myfilter)
+				.forEach((i) => {
+					targetAdvTexture?.removeControl(i)
+				})
+		}
 	}
 }
 

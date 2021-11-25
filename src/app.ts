@@ -3,13 +3,12 @@ import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
 import * as GUI from "@babylonjs/gui"
 import { ArcRotateCamera, Camera, Color3, Color4, CubeMapInfo, Engine, FreeCamera, HemisphericLight, Light, Matrix, Mesh, MeshBuilder, PointLight, Quaternion, Scene, SceneLoader, ShadowGenerator, StandardMaterial, Vector3 } from "@babylonjs/core";
-import { Ground } from "./objects/Ground";
 import { Player } from "./objects/Player"
 import { mouse } from "./system/Mouse";
 import { GLBModel, Movable } from "./objects/Object";
-import { Chair } from "./objects/Chair";
 import { gui } from "./GUI/GUI";
 import { camera } from "./objects/Camera";
+import { GUIObject } from "./GUI/GUIObject";
 
 class App {
 	private _canvas: HTMLCanvasElement
@@ -17,9 +16,8 @@ class App {
 	private _scene: Scene
 	private _advTexture: GUI.AdvancedDynamicTexture
 
-	private _ground: Ground
 	private _light: Light
-	private _player: Player
+	private _player: Player | undefined
 	private _objects: Movable[] = []
 
 	constructor() {
@@ -37,19 +35,17 @@ class App {
 		camera.initCamera(this._scene, "arc")
 		camera.attachControl(this._canvas)
 
-		this._light = new HemisphericLight("light1", new Vector3(1, 1, 0), this._scene)
+		this._light = new HemisphericLight("light1", new Vector3(1, 10, 0), this._scene)
 
-		this._ground = new Ground(this._scene)
-		this._ground.load()
+		let lodestone: GUIObject=new GUIObject(this._scene, "GUI Object")
+		lodestone.load()
 
-		let lodestone: Mesh = MeshBuilder.CreateSphere("sphere", { diameter: 1 }, this._scene)
-		lodestone.position = new Vector3(0, 2, 0)
-
-		this._advTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI")
-
-		this._player = new Player(this._scene)
+		this._player=new Player(this._scene)
+		this._player.setMovement("PV_free", {})
 		this._player.load()
 		camera.lookat(this._player)
+
+		this._advTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI")
 
 		//cam to mouse raycasting
 		mouse.init(this._canvas, this._scene)

@@ -1,10 +1,13 @@
 import { ArcRotateCamera, FreeCamera, Mesh, AbstractMesh, MeshBuilder, Scene, SceneLoader, TransformNode, Vector3, AnimationGroup } from "@babylonjs/core";
 import { gui } from "../GUI/GUI";
+import * as GUI from "@babylonjs/gui";
 import { keyboard } from "../system/Keyboard";
-import { PVA } from "../engine/PVA";
+import { Movement, PVA, PV_free } from "../engine/Movement";
 import { camera } from "./Camera";
+import { VolumeBasedPanel } from "@babylonjs/gui";
 
 class Movable extends TransformNode {
+	static VEL: Vector3 = new Vector3(1, 1, 1)
 	static FRONT_ACC: number = 0.01
 	static FRONT_VEL_MAX: number = 1
 	static SIDE_ACC: number = 0.01
@@ -13,17 +16,14 @@ class Movable extends TransformNode {
 	readonly isSelectable: boolean = true
 
 	private _selected: boolean = false
-	private _pva: PVA = new PVA()
+	private _movement: Movement | PVA | undefined
 	public advTexture
-	public gui3dManager
-	public gui3dPanel
+	public gui3dManager:GUI.GUI3DManager|undefined
+	public gui3dPanel:VolumeBasedPanel|undefined
 	private _movementInterval: NodeJS.Timer | undefined
 
 	constructor(scene: Scene, name?: string) {
 		super(name ?? "Movable", scene)
-
-		this._pva.setFrontAcc(Movable.FRONT_ACC, Movable.FRONT_VEL_MAX)
-		this._pva.setSideAcc(Movable.SIDE_ACC, Movable.SIDE_VEL_MAX)
 
 		this.advTexture = gui.setAdvTextureToRemote(`${this.name}GUI`, this._scene)
 		gui.set3DInfra(this, "sphere")
@@ -35,6 +35,21 @@ class Movable extends TransformNode {
 
 		this.position = new Vector3(0, 0, 0)
 	}
+	public setMovement(type: string, op: { vel?: Vector3, front_acc?: number, front_vel_max?: number, side_acc?: number, side_vel_max?: number }) {
+		if (type === "PVA") {
+			this._movement = new PVA();
+			(<PVA>this._movement).setFrontAcc(op.front_acc ?? Movable.FRONT_ACC, op.front_vel_max ?? Movable.FRONT_VEL_MAX);
+			(<PVA>this._movement).setSideAcc(op.side_acc ?? Movable.SIDE_ACC, op.side_vel_max ?? Movable.SIDE_VEL_MAX)
+		}
+		else if (type === "PV_free") {
+			this._movement = new PV_free();
+			this._movement.setVel(op.vel ?? new Vector3(Movable.VEL.x, Movable.VEL.y, Movable.VEL.z))
+		}
+		else {
+			this._movement = new Movement()
+			this._movement.setVel(op.vel ?? new Vector3(Movable.VEL.x, Movable.VEL.y, Movable.VEL.z))
+		}
+	}
 
 	private _attachNametag() {
 		gui.setNameTag(`${this.name} selected`, { innerText: this.name, fontSize: 10, color: "coral", offsetY: -60 }, this)
@@ -43,7 +58,7 @@ class Movable extends TransformNode {
 		gui.removeByName(`${this.name} selected`, this)
 	}
 
-	private _attachButton() {
+	protected _attachButton() {
 		let offsetY = 0
 		const getOffsetY = () => { offsetY += 20; return offsetY - 20 }
 		const getOP = (innerText?: string) => ({ innerText: innerText ?? "button", w: "60px", h: "20px", color: "coral", bgcolor: "skyblue", offsetY: getOffsetY() })
@@ -51,31 +66,36 @@ class Movable extends TransformNode {
 		const btn3: string = `${this.name} INTERFACE 3D`
 		gui.setBtn3(btn3, { innerText: "CANCEL" }, this)
 	}
-	private _detachButton() {
+	protected _detachButton() {
 		gui.removeByName((i) => (i.name.includes("INTERFACE")), this)
 	}
 
-	private _attachMove() {
+	protected _attachMove() {
+		if (!this._movement) return
+
 		this._movementInterval = setInterval(() => {
 			const keystat = keyboard.getKeyStatus()
 
 			const dYaw = ((keystat.q ? -1 : 0) + (keystat.e ? 1 : 0)) * Movable.RoG
 			this.rotation.set(this.rotation.x, this.rotation.y + dYaw, this.rotation.z)
 
-			this._pva.moveFront((keystat.w ? -1 : 0) + (keystat.s ? 1 : 0))
-			this._pva.moveSide((keystat.d ? -1 : 0) + (keystat.a ? 1 : 0))
+			this._movement?.moveFront((keystat.w ? -1 : 0) + (keystat.s ? 1 : 0))
+			this._movement?.moveSide((keystat.d ? -1 : 0) + (keystat.a ? 1 : 0))
+			this._movement?.moveUpDown((keystat.Control ? -1 : 0) + (keystat[" "] ? 1 : 0))
 
 			let out_vel: Vector3 = Vector3.Zero()
-			this._pva.getNormalizedVel().rotateByQuaternionToRef(this.rotation.toQuaternion(), out_vel)
+			this._movement?.getNormalizedVel().rotateByQuaternionToRef(this.rotation.toQuaternion(), out_vel)
 
 			this.position.addToRef(out_vel, this.position)
 		}, 40)
 	}
-	private _detachMove() {
+	protected _detachMove() {
 		if (this._movementInterval) {
 			clearInterval(this._movementInterval)
 		}
-		this._pva.reset()
+		if (this._movement && this._movement["reset"]) {
+			(<PVA>this._movement).reset()
+		}
 	}
 
 	/**
